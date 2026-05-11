@@ -1,0 +1,57 @@
+{
+  "dataset": "IQ-OTH/NCCD Lung Cancer CT Dataset",
+  "total_images": 1097,
+  "estimated_patients": 110,
+  "leakage_confirmed": true,
+  "splitting_method_used": "StratifiedShuffleSplit on individual images (no patient grouping)",
+  "evidence": {
+    "Benign": {
+      "n_images": 120,
+      "est_patients": 40,
+      "est_slices_per_patient": 3,
+      "consecutive_similarity_mean_r": 0.9002,
+      "consecutive_similarity_max_r": 1.0,
+      "distant_similarity_mean_r": 0.6493,
+      "similarity_gap": 0.2509,
+      "exact_duplicates_found": 18,
+      "near_duplicates_r_gt_0_95": 76,
+      "leakage_risk": "HIGH"
+    },
+    "Malignant": {
+      "n_images": 561,
+      "est_patients": 40,
+      "est_slices_per_patient": 14,
+      "consecutive_similarity_mean_r": 0.9341,
+      "consecutive_similarity_max_r": 0.9997,
+      "distant_similarity_mean_r": 0.4429,
+      "similarity_gap": 0.4912,
+      "exact_duplicates_found": 55,
+      "near_duplicates_r_gt_0_95": 461,
+      "leakage_risk": "HIGH"
+    },
+    "Normal": {
+      "n_images": 416,
+      "est_patients": 30,
+      "est_slices_per_patient": 14,
+      "consecutive_similarity_mean_r": 0.9297,
+      "consecutive_similarity_max_r": 0.9997,
+      "distant_similarity_mean_r": 0.6314,
+      "similarity_gap": 0.2983,
+      "exact_duplicates_found": 67,
+      "near_duplicates_r_gt_0_95": 308,
+      "leakage_risk": "HIGH"
+    }
+  },
+  "inflated_results": {
+    "test_accuracy_reported_pct": 98.18,
+    "test_f1_reported": 0.9619,
+    "note": "These metrics are inflated. Same patient slices appear in both train and test sets."
+  },
+  "recommendation": "Use patient-level GroupShuffleSplit. Assign all slices of one patient to a single split only. Expected honest accuracy: 75-87%.",
+  "output_figures": [
+    "fig1_similarity_distributions.png",
+    "fig2_near_duplicate_frames.png",
+    "fig3_leakage_mechanism.png",
+    "fig4_impact_metrics.png"
+  ]
+}

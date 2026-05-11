@@ -1,0 +1,53 @@
+{
+  "dataset": "LUNA16 subsets 7-9 (patient-level split)",
+  "split": {
+    "train": "subset7",
+    "val": "subset8",
+    "test": "subset9"
+  },
+  "model": {
+    "backbone": "resnet50",
+    "best_epoch": 19
+  },
+  "val_metrics_at_save": {
+    "f1": 0.9595290654893304,
+    "auc": 0.9648725147275405
+  },
+  "test_threshold_0.5": {
+    "threshold": 0.5,
+    "accuracy": 0.9244712990936556,
+    "balanced_acc": 0.89610197124648,
+    "precision": 0.9571150097465887,
+    "recall": 0.9460500963391136,
+    "specificity": 0.8461538461538461,
+    "f1": 0.9515503875968992,
+    "mcc": 0.7806149784698965,
+    "roc_auc": 0.9591198781950226,
+    "pr_auc": 0.9837270480232791,
+    "confusion": {
+      "TP": 491,
+      "FP": 22,
+      "TN": 121,
+      "FN": 28
+    }
+  },
+  "test_threshold_optimal": {
+    "threshold": 0.5100694298744202,
+    "accuracy": 0.9229607250755287,
+    "balanced_acc": 0.8951385801096784,
+    "precision": 0.95703125,
+    "recall": 0.9441233140655106,
+    "specificity": 0.8461538461538461,
+    "f1": 0.950533462657614,
+    "mcc": 0.7768738770539092,
+    "roc_auc": 0.9591198781950226,
+    "pr_auc": 0.9837270480232791,
+    "confusion": {
+      "TP": 490,
+      "FP": 22,
+      "TN": 121,
+      "FN": 29
+    }
+  },
+  "optimal_threshold": 0.5100694298744202
+}

@@ -1,0 +1,81 @@
+# ─────────────────────────────────────────────────────────
+# LUNA16 raw data — DO NOT COMMIT
+# Public dataset, ~115 GB. Download from luna16.grand-challenge.org
+# ─────────────────────────────────────────────────────────
+/luna16/
+
+# ─────────────────────────────────────────────────────────
+# Extracted patch datasets — regenerable from raw LUNA16
+# Run _extract_full_optionB.py to rebuild (~6 minutes)
+# ─────────────────────────────────────────────────────────
+/luna16_patches/
+/luna16_patches_full/
+
+# ─────────────────────────────────────────────────────────
+# Model checkpoints — keep only v2 (the demo model)
+# Other variants are retrainable from the scripts
+# ─────────────────────────────────────────────────────────
+/luna16_runs_full/v1_full/best.pth
+/luna16_runs_full/v3_full/best.pth
+/luna16_runs_ablation/**/best.pth
+/model/
+/model_luna16/
+/model_luna16_v2/
+/model_luna16_v3/
+
+# ─────────────────────────────────────────────────────────
+# Early experiments / unrelated material
+# ─────────────────────────────────────────────────────────
+/cnn_output/
+/Assignment 1/
+/Data/
+/img/
+/_qa_slides/
+
+# Reference PDFs / screenshots not part of this project
+/TA.pdf
+/Topic 5 - MLNN_full_s-1.pdf
+Requirement 1.png
+Requirement 2.png
+
+# Unrelated assignment files
+assignment1.py
+make_images.py
+new.ipynb
+
+# ─────────────────────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.ipynb_checkpoints/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# ─────────────────────────────────────────────────────────
+# Node (for the .js deck builder)
+# ─────────────────────────────────────────────────────────
+node_modules/
+package-lock.json
+
+# ─────────────────────────────────────────────────────────
+# Editors / OS / agents
+# ─────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.claude/
+*.log
+*.tmp
+
+# Build artefacts
+*.aux
+*.toc

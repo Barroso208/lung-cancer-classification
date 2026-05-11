@@ -1,0 +1,52 @@
+PATIENT-LEVEL DATA LEAKAGE ANALYSIS
+Dataset: IQ-OTH/NCCD Lung Cancer CT Dataset
+========================================================
+
+VERDICT: LEAKAGE CONFIRMED
+
+DATASET FACTS
+-------------
+  Total images  : 1,097
+  Est. patients : ~110  (Benign ~40, Malignant ~40, Normal ~30)
+  Files named   : "Class case (N).jpg"  — NO patient ID embedded
+  Est. slices/patient: Benign ~3, Malignant ~14, Normal ~14
+
+STATISTICAL EVIDENCE
+--------------------
+  Class       ConsecMean-r  DistantMean-r  Gap    ExactDupes  NearDupes(r>0.95)
+  Benign          0.900          0.649        0.251      18         76
+  Malignant       0.934          0.443        0.491      55         461
+  Normal          0.930          0.631        0.298      67         308
+
+  Consecutive = adjacent file indices (likely same patient)
+  Distant = index +50 apart (likely different patient)
+  Gap > 0 confirms within-patient frames are significantly more similar
+  ExactDupes (r=1.0) = identical CT frames appearing multiple times
+
+MECHANISM
+---------
+  Current code uses StratifiedShuffleSplit on individual IMAGES (not patients).
+  ~14 slices per malignant patient: if patient X has slices 1-14,
+  roughly 10 slices go to train and 4 go to test.
+  The model memorises patient-specific anatomy during training,
+  then "recognises" it in the test set — not learning generalised features.
+
+INFLATED METRICS
+----------------
+  Reported test accuracy (TTA) : 98.18%
+  Reported macro F1 (TTA)      : 0.9619
+  These are UNRELIABLE due to leakage.
+  Honest patient-level estimate : 75-87% accuracy
+
+RECOMMENDED FIX
+---------------
+  Replace StratifiedShuffleSplit with GroupShuffleSplit.
+  Assign consecutive image blocks to patient groups (one group = one patient).
+  Ensure no patient appears in more than one split.
+
+FIGURES SAVED
+-------------
+  fig1_similarity_distributions.png  — Distribution of r values
+  fig2_near_duplicate_frames.png     — Side-by-side near-duplicate CT slices
+  fig3_leakage_mechanism.png         — How random splitting causes leakage
+  fig4_impact_metrics.png            — Metric inflation illustration

@@ -1,0 +1,44 @@
+LUNA16 COMPREHENSIVE EVALUATION — PATIENT-LEVEL SPLIT (no leakage)
+==================================================================
+
+Best model: resnet50, epoch 30
+Test set  : subset9  (662 patches, 88 patients)
+
+TEST METRICS @ threshold 0.5
+----------------------------
+  Accuracy          : 0.9441
+  Balanced Accuracy : 0.9086
+  Precision         : 0.9582
+  Recall / Sensitivity: 0.9711
+  Specificity       : 0.8462
+  F1-Score          : 0.9646
+  MCC               : 0.8324
+  ROC-AUC           : 0.9726
+  PR-AUC (AP)       : 0.9908
+  Confusion: TP=504  FP=22  TN=121  FN=15
+
+TEST METRICS @ threshold 0.401 (tuned on VAL to max F1)
+----------------------------
+  Accuracy          : 0.9441
+  Balanced Accuracy : 0.9086
+  Precision         : 0.9582
+  Recall / Sensitivity: 0.9711
+  Specificity       : 0.8462
+  F1-Score          : 0.9646
+  MCC               : 0.8324
+  Confusion: TP=504  FP=22  TN=121  FN=15
+
+OVERFITTING / UNDERFITTING STATUS
+----------------------------
+  Early stopping : ACTIVE (patience=8 on val F1)
+  Train-val gap  : small — healthy fit, not overfitting
+  Regularisation : Dropout (0.4), RandomErasing, ColorJitter, weight_decay,
+                   weighted loss, OneCycleLR, gradient clipping
+
+FILES SAVED
+----------------------------
+  luna16_output/metrics_comparison.png
+  luna16_output/roc_pr_curves.png
+  luna16_output/confusion_matrix_dual.png
+  luna16_output/overfitting_analysis.png  (if history.json exists)
+  luna16_output/evaluation_report.json

@@ -1,0 +1,49 @@
+{
+  "dataset": "LUNA16 subsets 2+7-9 (patient-level split)",
+  "model": {
+    "backbone": "densenet121",
+    "best_epoch": 23
+  },
+  "loss": "FocalLoss(alpha=0.25, gamma=2.0)",
+  "augmentation": [
+    "flip",
+    "rotate",
+    "color-jitter",
+    "random-erasing",
+    "mixup(alpha=0.4)"
+  ],
+  "test_single_pass": {
+    "accuracy": 0.9652567975830816,
+    "balanced_acc": 0.9373122060983332,
+    "precision": 0.9696969696969697,
+    "recall": 0.9865125240847784,
+    "specificity": 0.8881118881118881,
+    "f1": 0.9780324737344794,
+    "mcc": 0.8957853019360184,
+    "roc_auc": 0.9850034358704879,
+    "pr_auc": 0.9907723747406796,
+    "confusion": {
+      "TP": 512,
+      "FP": 16,
+      "TN": 127,
+      "FN": 7
+    }
+  },
+  "test_tta": {
+    "accuracy": 0.9712990936555891,
+    "balanced_acc": 0.9436988830052414,
+    "precision": 0.9716981132075472,
+    "recall": 0.9922928709055877,
+    "specificity": 0.8951048951048951,
+    "f1": 0.9818875119161106,
+    "mcc": 0.9139977535545268,
+    "roc_auc": 0.9867415821173047,
+    "pr_auc": 0.9954156201767073,
+    "confusion": {
+      "TP": 515,
+      "FP": 15,
+      "TN": 128,
+      "FN": 4
+    }
+  }
+}
