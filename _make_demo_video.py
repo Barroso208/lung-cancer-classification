@@ -203,17 +203,23 @@ def render_title():
     # Vertical accent bar on left
     ax.add_patch(mpatches.Rectangle((0, 0), 0.04, 1, transform=ax.transAxes,
                                     facecolor=RED, edgecolor='none'))
-    ax.text(0.5, 0.62, "Lung Cancer Classification",
-            ha="center", va="center", fontsize=44, color="white",
+    ax.text(0.5, 0.66, "Lung Cancer Classification",
+            ha="center", va="center", fontsize=42, color="white",
             fontweight="bold", family="serif", transform=ax.transAxes)
-    ax.text(0.5, 0.50, "Live Demonstration  ·  ResNet-50 + CBAM",
-            ha="center", va="center", fontsize=20, color="#C0CADC",
+    ax.text(0.5, 0.54, "Live Demonstration  ·  v2 (ResNet-50 + CBAM)",
+            ha="center", va="center", fontsize=19, color="#C0CADC",
             style="italic", family="serif", transform=ax.transAxes)
-    ax.add_patch(mpatches.Rectangle((0.45, 0.42), 0.10, 0.005,
+    ax.add_patch(mpatches.Rectangle((0.45, 0.46), 0.10, 0.005,
                                     transform=ax.transAxes,
                                     facecolor=RED, edgecolor='none'))
-    ax.text(0.5, 0.32, "Test set: subsets 8 + 9 (1 528 patches, 176 unseen patients)",
-            ha="center", va="center", fontsize=15, color="white",
+    ax.text(0.5, 0.37, "v2 is shown here to illustrate the CBAM attention heatmap;",
+            ha="center", va="center", fontsize=14, color="white",
+            transform=ax.transAxes)
+    ax.text(0.5, 0.32, "our final deployment model is v1 + TTA (see Recommendation slide).",
+            ha="center", va="center", fontsize=14, color="white",
+            transform=ax.transAxes)
+    ax.text(0.5, 0.22, "Test set: subsets 8 + 9 (1 528 patches, 176 unseen patients)",
+            ha="center", va="center", fontsize=13, color="#C0CADC",
             transform=ax.transAxes)
     ax.text(0.5, 0.10, "Seminar 2  ·  12 May 2026  ·  Huu Thuc Tran",
             ha="center", va="center", fontsize=12, color="#C0CADC",
@@ -289,33 +295,37 @@ def render_summary():
     ax = fig.add_axes([0, 0, 1, 1]); ax.set_axis_off()
     ax.add_patch(mpatches.Rectangle((0, 0), 0.04, 1, transform=ax.transAxes,
                                     facecolor=RED, edgecolor='none'))
-    ax.text(0.5, 0.78, "How it does overall",
-            ha="center", va="center", fontsize=20, color="#C0CADC",
+    ax.text(0.5, 0.82, "Deployment model — v1 + TTA",
+            ha="center", va="center", fontsize=22, color="white",
+            fontweight="bold", family="serif", transform=ax.transAxes)
+    ax.text(0.5, 0.74, "Test on 1 528 unseen patches  ·  176 patients  ·  nodule = positive",
+            ha="center", va="center", fontsize=14, color="#C0CADC",
             family="sans-serif", style="italic", transform=ax.transAxes)
-    ax.text(0.5, 0.62, "1 528 unseen test patches  ·  176 patients",
-            ha="center", va="center", fontsize=18, color="#C0CADC",
-            transform=ax.transAxes)
+    # v1 + TTA corrected metrics
     metrics = [
-        ("F1-Score",   "0.9829"),
-        ("ROC-AUC",    "0.9917"),
-        ("Recall",     "0.9874"),
-        ("Specificity","0.9228"),
+        ("F1-Score",     "0.9474"),
+        ("Recall",       "0.9347"),
+        ("MCC",          "0.9329"),
+        ("ROC-AUC",      "0.9934"),
     ]
     for i, (name, val) in enumerate(metrics):
         x = 0.18 + i * 0.21
-        ax.text(x, 0.45, val, ha="center", va="center", fontsize=42,
+        ax.text(x, 0.55, val, ha="center", va="center", fontsize=42,
                 color="white", fontweight="bold", family="serif",
                 transform=ax.transAxes)
-        ax.text(x, 0.34, name, ha="center", va="center", fontsize=14,
+        ax.text(x, 0.45, name, ha="center", va="center", fontsize=14,
                 color="#C0CADC", family="sans-serif", transform=ax.transAxes)
+    ax.text(0.5, 0.32, "315 of 337 nodules caught  ·  only 13 false alarms",
+            ha="center", va="center", fontsize=15, color="white",
+            family="sans-serif", transform=ax.transAxes)
 
-    ax.add_patch(mpatches.Rectangle((0.45, 0.20), 0.10, 0.005,
+    ax.add_patch(mpatches.Rectangle((0.45, 0.22), 0.10, 0.005,
                                     transform=ax.transAxes,
                                     facecolor=RED, edgecolor='none'))
-    ax.text(0.5, 0.12, "Patient-level split  ·  zero leakage",
-            ha="center", va="center", fontsize=14, color="white",
+    ax.text(0.5, 0.14, "Patient-level split  ·  zero leakage  ·  audited metric reporting",
+            ha="center", va="center", fontsize=13, color="white",
             transform=ax.transAxes)
-    ax.text(0.5, 0.05, "Lung Cancer Classification  ·  Seminar 2  ·  12 May 2026",
+    ax.text(0.5, 0.06, "Lung Cancer Classification  ·  Seminar 2  ·  12 May 2026",
             ha="center", va="center", fontsize=11, color="#C0CADC",
             transform=ax.transAxes)
     return fig_to_array(fig)

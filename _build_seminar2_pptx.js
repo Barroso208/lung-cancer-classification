@@ -7,14 +7,24 @@ const fs      = require("fs");
 const path    = require("path");
 
 // ───────── Data loaded from disk ─────────
-const report  = JSON.parse(fs.readFileSync("luna16_runs_full/comparison_report.json", "utf8"));
+// Note: comparison_report_corrected.json contains nodule-as-positive metrics,
+// re-computed after we discovered the ImageFolder label-index inversion bug.
+const correctedReport = JSON.parse(fs.readFileSync("luna16_runs_full/comparison_report_corrected.json", "utf8"));
+const ablReport       = JSON.parse(fs.readFileSync("luna16_runs_ablation/ablation_report_corrected.json", "utf8"));
 const histV1  = JSON.parse(fs.readFileSync("luna16_runs_full/v1_full/history.json",  "utf8"));
 const histV2  = JSON.parse(fs.readFileSync("luna16_runs_full/v2_full/history.json",  "utf8"));
 const histV3  = JSON.parse(fs.readFileSync("luna16_runs_full/v3_full/history.json",  "utf8"));
 
-const v1 = report.v1_full.test;
-const v2 = report.v2_full.test_tta;
-const v3 = report.v3_full.test_tta;
+// Map corrected results into convenient short names
+const v1     = correctedReport.results.v1_full;        // ResNet-50 baseline
+const v1tta  = correctedReport.results.v1_full_tta;    // v1 + 5-view TTA  ← deployment pick
+const v2     = correctedReport.results.v2_full;        // ResNet-50 + CBAM + Focal + MixUp + TTA
+const v3     = correctedReport.results.v3_full;        // DenseNet-121 + CBAM + Focal + MixUp + TTA
+// Ablation single-component results
+const v1cbam  = ablReport.results.v1_cbam;
+const v1focal = ablReport.results.v1_focal;
+const v1mixup = ablReport.results.v1_mixup;
+
 
 // ───────── Palette ─────────
 const NAVY   = "0F2C4F";
@@ -191,7 +201,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 13, paraSpaceAfter: 4, margin: 0,
   });
 
-  footer(s, 2, 17);
+  footer(s, 2, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -260,7 +270,7 @@ function bigTitle(slide, title) {
     });
   });
 
-  footer(s, 3, 17);
+  footer(s, 3, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -352,7 +362,7 @@ function bigTitle(slide, title) {
     }
   });
 
-  footer(s, 4, 17);
+  footer(s, 4, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -441,7 +451,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 13, valign: "middle", margin: 0,
   });
 
-  footer(s, 5, 17);
+  footer(s, 5, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -531,11 +541,115 @@ function bigTitle(slide, title) {
     yv += 1.32;
   });
 
-  footer(s, 6, 17);
+  footer(s, 6, 18);
 }
 
 // ─────────────────────────────────────────────────────────
-//  SLIDE 7 — DIFFERENCES BETWEEN VERSIONS  (NEW)
+//  SLIDE 7 — CUSTOM MODULE: CBAM (NEW)
+// ─────────────────────────────────────────────────────────
+{
+  const s = pres.addSlide();
+  s.background = { color: CREAM };
+  header(s, "Methodology — Custom Module: CBAM");
+  bigTitle(s, "Channel + Spatial Attention");
+
+  // Subtitle line
+  s.addText("Our extension to ResNet-50 that gives the network a learned “where + what to look at” mechanism.", {
+    x: 0.5, y: 1.75, w: 12.3, h: 0.32,
+    fontFace: "Calibri", fontSize: 13, italic: true, color: GRAY, margin: 0,
+  });
+
+  // Two side-by-side cards: Channel attention | Spatial attention
+  const cards = [
+    {
+      x: 0.5, w: 6.1, color: NAVY,
+      eyebrow: "PART 1  ·  CHANNEL ATTENTION",
+      title: "“Which channels matter?”",
+      formula: "M_c  =  σ ( MLP( AvgPool(F) )  +  MLP( MaxPool(F) ) )",
+      bullets: [
+        "Squeezes the spatial dims H×W → 1×1 per channel",
+        "Two parallel pools (avg + max) feed a shared 2-layer MLP",
+        "Sigmoid produces an importance weight per channel  (vector of length 2048)",
+        "Applied as element-wise multiplication:   F′ = M_c ⊗ F",
+      ],
+    },
+    {
+      x: 6.7, w: 6.1, color: RED,
+      eyebrow: "PART 2  ·  SPATIAL ATTENTION",
+      title: "“Where to look?”",
+      formula: "M_s  =  σ ( Conv₇×₇ ( [ AvgPool_c(F′) ; MaxPool_c(F′) ] ) )",
+      bullets: [
+        "Squeezes the channels C → 1 channel  (avg + max stack: 2 × H × W)",
+        "7 × 7 convolution learns a spatial saliency map",
+        "Sigmoid produces an importance weight per pixel  (H × W map)",
+        "Applied as element-wise multiplication:   F″ = M_s ⊗ F′",
+      ],
+    },
+  ];
+
+  cards.forEach(c => {
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: c.x, y: 2.20, w: c.w, h: 3.9,
+      fill: { color: "FFFFFF" }, line: { color: "E0DCD0", width: 1 },
+      shadow: { type: "outer", color: "000000", blur: 8, offset: 2, angle: 90, opacity: 0.08 }
+    });
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: c.x, y: 2.20, w: c.w, h: 0.08, fill: { color: c.color }, line: { color: c.color },
+    });
+    s.addText(c.eyebrow, {
+      x: c.x + 0.25, y: 2.38, w: c.w - 0.4, h: 0.3,
+      fontFace: "Calibri", fontSize: 11, bold: true, color: c.color, charSpacing: 4, margin: 0,
+    });
+    s.addText(c.title, {
+      x: c.x + 0.25, y: 2.68, w: c.w - 0.4, h: 0.5,
+      fontFace: "Georgia", fontSize: 20, bold: true, color: NAVY, margin: 0,
+    });
+    // Formula stripe
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: c.x + 0.25, y: 3.25, w: c.w - 0.5, h: 0.55,
+      fill: { color: LIGHT }, line: { color: "E0DCD0", width: 1 },
+    });
+    s.addText(c.formula, {
+      x: c.x + 0.3, y: 3.27, w: c.w - 0.6, h: 0.5,
+      fontFace: "Consolas", fontSize: 12, color: NAVY, italic: true,
+      align: "center", valign: "middle", margin: 0,
+    });
+    // Bullets
+    s.addText(c.bullets.map((b, j) => ({
+      text: b, options: { bullet: true, color: BLACK, breakLine: j !== c.bullets.length - 1 }
+    })), {
+      x: c.x + 0.25, y: 3.95, w: c.w - 0.4, h: 2.05,
+      fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 5, margin: 0,
+    });
+  });
+
+  // Bottom integration / reference card
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 0.5, y: 6.25, w: 12.3, h: 0.85,
+    fill: { color: "FFFFFF" }, line: { color: "E0DCD0", width: 1 },
+  });
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 0.5, y: 6.25, w: 0.12, h: 0.85, fill: { color: NAVY }, line: { color: NAVY }
+  });
+  s.addText("INTEGRATION", {
+    x: 0.7, y: 6.32, w: 4, h: 0.3,
+    fontFace: "Calibri", fontSize: 11, bold: true, color: GRAY, charSpacing: 4, margin: 0,
+  });
+  s.addText([
+    { text: "Pipeline:  ", options: { bold: true, color: NAVY } },
+    { text: "F (2048 × 7 × 7)  →  Channel Attention  →  F′  →  Spatial Attention  →  F″   ", options: { color: BLACK } },
+    { text: "·  inserted after ResNet-50's layer4  ·  ~500 K added params (≈ 2 % of ResNet-50)  ·  ", options: { color: BLACK } },
+    { text: "Ref: Woo et al. (ECCV 2018)", options: { italic: true, color: GRAY } },
+  ], {
+    x: 0.7, y: 6.62, w: 12.0, h: 0.45,
+    fontFace: "Calibri", fontSize: 12, margin: 0,
+  });
+
+  footer(s, 7, 18);
+}
+
+// ─────────────────────────────────────────────────────────
+//  SLIDE 8 — DIFFERENCES BETWEEN VERSIONS
 // ─────────────────────────────────────────────────────────
 {
   const s = pres.addSlide();
@@ -628,7 +742,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 2, margin: 0,
   });
 
-  footer(s, 7, 17);
+  footer(s, 8, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -678,19 +792,23 @@ function bigTitle(slide, title) {
   });
   s.addText([
     { text: "Patient-level partitioning  ", options: { bold: true, color: NAVY } },
-    { text: "—  no patient appears in two splits.", options: { color: BLACK, breakLine: true } },
+    { text: "—  no patient appears in two splits.  ", options: { color: BLACK } },
+    { text: "(Audited: zero overlap across 623 / 89 / 176 patients.)", options: { italic: true, color: GRAY, breakLine: true } },
     { text: "Test set doubled  ", options: { bold: true, color: NAVY } },
     { text: "from 662 → 1 528 patches  ⇒  CI on F1 narrows from ±0.012 to ", options: { color: BLACK } },
     { text: "±0.008", options: { bold: true, color: RED, breakLine: true } },
-    { text: "  → smaller architectural deltas now become ", options: { color: BLACK } },
-    { text: "statistically detectable.", options: { italic: true, color: BLACK, breakLine: true } },
-    { text: "Class prevalence is consistent across splits (≈ 22 % nodule), so train-time class imbalance handling generalises to evaluation.", options: { color: BLACK } },
+    { text: "Class prevalence is consistent across splits (≈ 22 % nodule).  ", options: { color: BLACK } },
+    { text: "Positive class throughout this deck = nodule.", options: { bold: true, color: NAVY, breakLine: true } },
+    { text: " ", options: { breakLine: true, fontSize: 4 } },
+    { text: "⚠ Audit note: ", options: { bold: true, color: RED } },
+    { text: "during final sanity check we found that the original metric code used pos_label = 1, but PyTorch's ImageFolder had alphabetically mapped nodule → 0. Recall and Specificity were therefore inverted in our earlier reports. ", options: { italic: true, color: BLACK } },
+    { text: "All numbers in this deck are post-correction.", options: { bold: true, italic: true, color: NAVY } },
   ], {
     x: 0.7, y: 4.75, w: 11.9, h: 1.85,
-    fontFace: "Calibri", fontSize: 14, paraSpaceAfter: 4, margin: 0,
+    fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 3, margin: 0,
   });
 
-  footer(s, 8, 17);
+  footer(s, 9, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -770,21 +888,22 @@ function bigTitle(slide, title) {
     { text: "= best value in each row", options: { color: BLACK, breakLine: true } },
     { text: " ", options: { breakLine: true, fontSize: 6 } },
     { text: "v1 ", options: { bold: true, color: NAVY } },
-    { text: "wins 7 of 9 metrics", options: { color: BLACK, breakLine: true } },
+    { text: "wins 6 of 9  (incl. F1, Recall, MCC, AUC)", options: { color: BLACK, breakLine: true } },
     { text: "v2 ", options: { bold: true, color: NAVY } },
-    { text: "wins Recall", options: { color: BLACK, breakLine: true } },
+    { text: "wins Precision, Specificity, PR-AUC", options: { color: BLACK, breakLine: true } },
     { text: "v3 ", options: { bold: true, color: NAVY } },
-    { text: "wins Precision", options: { color: BLACK, breakLine: true } },
+    { text: "is tied or below on every metric", options: { color: BLACK, breakLine: true } },
     { text: " ", options: { breakLine: true, fontSize: 6 } },
     { text: "BUT — ", options: { bold: true, color: RED } },
     { text: "all deltas fit ", options: { color: BLACK } },
-    { text: "inside the ±0.008 F1 confidence interval.", options: { italic: true, color: BLACK } },
+    { text: "inside the ±0.008 F1 confidence interval", options: { italic: true, color: BLACK } },
+    { text: " — see Ablation slide for the cleanest individual configuration.", options: { italic: true, color: BLACK } },
   ], {
     x: 9.6, y: 2.65, w: 3.2, h: 3.8,
-    fontFace: "Calibri", fontSize: 13, paraSpaceAfter: 6, margin: 0,
+    fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 5, margin: 0,
   });
 
-  footer(s, 9, 17);
+  footer(s, 10, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -818,8 +937,8 @@ function bigTitle(slide, title) {
     titleColor: NAVY, titleFontFace: "Georgia", titleFontSize: 14,
   });
 
-  // Right: confusion matrix for v1 (best F1)
-  s.addText("Confusion (v1, best F1 = " + v1.f1.toFixed(4) + ")", {
+  // Right: confusion matrix for v1 + TTA (our recommended deployment model)
+  s.addText("Confusion (v1 + TTA  — F1 = " + v1tta.f1.toFixed(4) + ")", {
     x: 8.0, y: 2.0, w: 4.8, h: 0.4,
     fontFace: "Georgia", fontSize: 14, bold: true, color: NAVY, margin: 0,
   });
@@ -829,11 +948,11 @@ function bigTitle(slide, title) {
      { text: "Pred. non-nodule",         options: { fill: { color: NAVY }, color: "FFFFFF", bold: true, align: "center" } },
      { text: "Pred. nodule",             options: { fill: { color: NAVY }, color: "FFFFFF", bold: true, align: "center" } }],
     [{ text: "True non-nodule",          options: { fill: { color: NAVY }, color: "FFFFFF", bold: true } },
-     { text: String(report.v1_full.test.confusion.TN),     options: { fill: { color: "DCE9F8" }, align: "center", bold: true, color: NAVY } },
-     { text: String(report.v1_full.test.confusion.FP),     options: { fill: { color: "FCE6E7" }, align: "center", bold: true, color: RED } }],
+     { text: String(v1tta.confusion.TN),     options: { fill: { color: "DCE9F8" }, align: "center", bold: true, color: NAVY } },
+     { text: String(v1tta.confusion.FP),     options: { fill: { color: "FCE6E7" }, align: "center", bold: true, color: RED } }],
     [{ text: "True nodule",              options: { fill: { color: NAVY }, color: "FFFFFF", bold: true } },
-     { text: String(report.v1_full.test.confusion.FN),     options: { fill: { color: "FCE6E7" }, align: "center", bold: true, color: RED } },
-     { text: String(report.v1_full.test.confusion.TP),     options: { fill: { color: "DCE9F8" }, align: "center", bold: true, color: NAVY } }],
+     { text: String(v1tta.confusion.FN),     options: { fill: { color: "FCE6E7" }, align: "center", bold: true, color: RED } },
+     { text: String(v1tta.confusion.TP),     options: { fill: { color: "DCE9F8" }, align: "center", bold: true, color: NAVY } }],
   ];
   s.addTable(cmCells, {
     x: 8.0, y: 2.5, w: 4.8, colW: [1.6, 1.6, 1.6], rowH: 0.7,
@@ -865,7 +984,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 3, margin: 0,
   });
 
-  footer(s, 10, 17);
+  footer(s, 11, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -884,16 +1003,16 @@ function bigTitle(slide, title) {
       label: "Finding 1",
       title: "All three models hit the same ceiling.",
       body: [
-        { text: "F1 ≈ 0.98, AUC ≈ 0.99, MCC ≈ 0.92 across v1, v2, v3.", b: false, br: true },
+        { text: "F1 ≈ 0.94, AUC ≈ 0.99, MCC ≈ 0.92 across v1, v2, v3 (nodule = positive).", b: false, br: true },
         { text: " ", b: false, br: true },
         { text: "Largest pair-wise F1 delta: ", b: false },
-        { text: "0.003", b: true, color: RED },
-        { text: "  —  smaller than the ", b: false },
+        { text: "0.010", b: true, color: RED },
+        { text: "  —  comparable to the ", b: false },
         { text: "±0.008", b: true, color: RED },
         { text: " confidence interval at this test size.", b: false, br: true },
         { text: " ", b: false, br: true },
         { text: "Statistically: ", b: true, color: NAVY },
-        { text: "indistinguishable.", b: false, italic: true },
+        { text: "the three are nearly indistinguishable on accuracy-type metrics.", b: false, italic: true },
       ]
     },
     {
@@ -902,13 +1021,13 @@ function bigTitle(slide, title) {
       title: "Data > architecture at this scale.",
       body: [
         { text: "Earlier 1 407-patch run: ", b: false },
-        { text: "v2 beat v1 by +2.6 F1.", b: true, color: NAVY, br: true },
+        { text: "v2 beat v1 by ≈ +2.6 F1.", b: true, color: NAVY, br: true },
         { text: "Now (4 972 patches): ", b: false },
         { text: "the gap vanishes.", b: true, color: NAVY, br: true },
         { text: " ", b: false, br: true },
         { text: "Regularisation tricks (CBAM, Focal, MixUp) help most when training data is scarce.", b: false, italic: true, br: true },
         { text: " ", b: false, br: true },
-        { text: "With sufficient data, plain ResNet-50 is enough.", b: true, color: NAVY },
+        { text: "With sufficient data, plain ResNet-50 is enough — and TTA is the only inference-time win that consistently helps.", b: true, color: NAVY },
       ]
     },
   ];
@@ -957,7 +1076,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 13, align: "center", valign: "middle", margin: 0,
   });
 
-  footer(s, 11, 17);
+  footer(s, 12, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -969,63 +1088,63 @@ function bigTitle(slide, title) {
   header(s, "Ablation Study — Each Component in Isolation");
   bigTitle(s, "What Each Improvement Contributes Alone");
 
-  // Header for ablation table
+  // Header for ablation table — all numbers below are POST-CORRECTION (nodule = positive)
   const ablRows = [
     [
       { text: "Variant", options: { bold: true, color: "FFFFFF", fill: { color: NAVY } } },
       { text: "F1",      options: { bold: true, color: "FFFFFF", fill: { color: NAVY }, align: "center" } },
+      { text: "Recall",  options: { bold: true, color: "FFFFFF", fill: { color: NAVY }, align: "center" } },
       { text: "MCC",     options: { bold: true, color: "FFFFFF", fill: { color: NAVY }, align: "center" } },
-      { text: "ROC-AUC", options: { bold: true, color: "FFFFFF", fill: { color: NAVY }, align: "center" } },
       { text: "Δ F1 vs v1", options: { bold: true, color: "FFFFFF", fill: { color: NAVY }, align: "center" } },
       { text: "Verdict", options: { bold: true, color: "FFFFFF", fill: { color: NAVY }, align: "center" } },
     ],
     [
       { text: "v1  (baseline)",    options: { bold: true, color: NAVY, fill: { color: "FFFFFF" } } },
-      { text: "0.9833", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "0.9399", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "0.9288", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
       { text: "0.9233", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
-      { text: "0.9929", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
       { text: "—",      options: { color: GRAY,  align: "center", fill: { color: "FFFFFF" } } },
       { text: "reference", options: { color: GRAY, italic: true, align: "center", fill: { color: "FFFFFF" } } },
     ],
     [
       { text: "v1 + CBAM", options: { bold: true, color: NAVY, fill: { color: LIGHT } } },
-      { text: "0.9795", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
+      { text: "0.9268", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
+      { text: "0.9199", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
       { text: "0.9063", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
-      { text: "0.9912", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
-      { text: "−0.0038", options: { color: GRAY, align: "center", fill: { color: LIGHT } } },
-      { text: "tied within noise",  options: { color: GRAY, italic: true, align: "center", fill: { color: LIGHT } } },
+      { text: "−0.0132", options: { color: GRAY, align: "center", fill: { color: LIGHT } } },
+      { text: "marginally hurts",  options: { color: GRAY, italic: true, align: "center", fill: { color: LIGHT } } },
     ],
     [
       { text: "v1 + Focal", options: { bold: true, color: NAVY, fill: { color: "FFFFFF" } } },
-      { text: "0.9807", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "0.9322", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "0.9377", options: { bold: true, color: NAVY, align: "center", fill: { color: "FFFFFF" } } },
       { text: "0.9128", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
-      { text: "0.9907", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
-      { text: "−0.0026", options: { color: GRAY, align: "center", fill: { color: "FFFFFF" } } },
-      { text: "tied within noise",  options: { color: GRAY, italic: true, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "−0.0078", options: { color: GRAY, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "highest recall · more FPs",  options: { color: NAVY, italic: true, align: "center", fill: { color: "FFFFFF" } } },
     ],
     [
       { text: "v1 + MixUp", options: { bold: true, color: NAVY, fill: { color: LIGHT } } },
-      { text: "0.9804", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
+      { text: "0.9289", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
+      { text: "0.9110", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
       { text: "0.9096", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
-      { text: "0.9884", options: { color: BLACK, align: "center", fill: { color: LIGHT } } },
-      { text: "−0.0029", options: { color: GRAY, align: "center", fill: { color: LIGHT } } },
+      { text: "−0.0110", options: { color: GRAY, align: "center", fill: { color: LIGHT } } },
       { text: "tied within noise",  options: { color: GRAY, italic: true, align: "center", fill: { color: LIGHT } } },
     ],
     [
-      { text: "v1 + TTA", options: { bold: true, color: NAVY, fill: { color: "FFFFFF" } } },
-      { text: "0.9854", options: { bold: true, color: RED, align: "center", fill: { color: "FFFFFF" } } },
-      { text: "0.9329", options: { bold: true, color: RED, align: "center", fill: { color: "FFFFFF" } } },
-      { text: "0.9934", options: { bold: true, color: RED, align: "center", fill: { color: "FFFFFF" } } },
-      { text: "+0.0021", options: { bold: true, color: RED, align: "center", fill: { color: "FFFFFF" } } },
-      { text: "free improvement", options: { color: RED, italic: true, bold: true, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "v1 + TTA", options: { bold: true, color: NAVY, fill: { color: "FCE6E7" } } },
+      { text: "0.9474", options: { bold: true, color: RED, align: "center", fill: { color: "FCE6E7" } } },
+      { text: "0.9347", options: { bold: true, color: RED, align: "center", fill: { color: "FCE6E7" } } },
+      { text: "0.9329", options: { bold: true, color: RED, align: "center", fill: { color: "FCE6E7" } } },
+      { text: "+0.0074", options: { bold: true, color: RED, align: "center", fill: { color: "FCE6E7" } } },
+      { text: "★ best — chosen as final model", options: { color: RED, italic: true, bold: true, align: "center", fill: { color: "FCE6E7" } } },
     ],
     [
-      { text: "v2  (all four)", options: { bold: true, color: NAVY, fill: { color: "FCE6E7" } } },
-      { text: "0.9829", options: { color: BLACK, align: "center", fill: { color: "FCE6E7" } } },
-      { text: "0.9212", options: { color: BLACK, align: "center", fill: { color: "FCE6E7" } } },
-      { text: "0.9917", options: { color: BLACK, align: "center", fill: { color: "FCE6E7" } } },
-      { text: "−0.0004", options: { color: GRAY, align: "center", fill: { color: "FCE6E7" } } },
-      { text: "combined model",   options: { bold: true, color: RED, italic: true, align: "center", fill: { color: "FCE6E7" } } },
+      { text: "v2  (all four)", options: { bold: true, color: NAVY, fill: { color: "FFFFFF" } } },
+      { text: "0.9382", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "0.9228", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "0.9212", options: { color: BLACK, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "−0.0018", options: { color: GRAY, align: "center", fill: { color: "FFFFFF" } } },
+      { text: "combined — gains cancel",   options: { color: GRAY, italic: true, align: "center", fill: { color: "FFFFFF" } } },
     ],
   ];
   s.addTable(ablRows, {
@@ -1050,22 +1169,21 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, bold: true, color: GRAY, charSpacing: 4, margin: 0,
   });
   s.addText([
-    { text: "Individually, ", options: { color: BLACK } },
     { text: "CBAM, Focal Loss, and MixUp ", options: { bold: true, color: NAVY } },
-    { text: "are each statistically tied with v1 (Δ within ±0.008 F1 confidence interval).", options: { color: BLACK, breakLine: true } },
+    { text: "individually each drift inside the ±0.008 F1 noise band — meaningful research attempts that did not pay off at this data scale (a common outcome in real ML projects).", options: { color: BLACK, breakLine: true } },
     { text: "Only ", options: { color: BLACK } },
     { text: "TTA ", options: { bold: true, color: RED } },
-    { text: "delivers a measurable improvement on its own.", options: { color: BLACK, breakLine: true } },
-    { text: "But each component addresses a ", options: { color: BLACK } },
-    { text: "different limitation ", options: { bold: true, color: NAVY } },
-    { text: "of ResNet-50 — and combining them in v2 produces the ", options: { color: BLACK } },
-    { text: "methodologically complete model.", options: { italic: true, bold: true, color: RED } },
+    { text: "delivers a consistent improvement across F1, MCC, Recall, AUC, and Specificity — and it's a free inference-time win on top of the baseline.", options: { color: BLACK, breakLine: true } },
+    { text: " ", options: { breakLine: true, fontSize: 4 } },
+    { text: "→  We adopt ", options: { color: BLACK } },
+    { text: "v1 + TTA ", options: { bold: true, color: RED } },
+    { text: "as our final deployment model.", options: { italic: true, color: BLACK } },
   ], {
     x: 0.7, y: 5.95, w: 11.9, h: 1.15,
     fontFace: "Calibri", fontSize: 13, paraSpaceAfter: 4, margin: 0,
   });
 
-  footer(s, 12, 17);
+  footer(s, 13, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1077,7 +1195,7 @@ function bigTitle(slide, title) {
   header(s, "Recommendation");
   bigTitle(s, "Which Model Should We Deploy?");
 
-  // Big v2 callout on the left
+  // Big v1+TTA callout on the left
   s.addShape(pres.shapes.RECTANGLE, {
     x: 0.5, y: 2.0, w: 5.5, h: 4.7,
     fill: { color: NAVY }, line: { color: NAVY }
@@ -1086,15 +1204,15 @@ function bigTitle(slide, title) {
     x: 0.7, y: 2.2, w: 5.1, h: 0.4,
     fontFace: "Calibri", fontSize: 13, bold: true, color: "C0CADC", charSpacing: 6, margin: 0,
   });
-  s.addText("v2", {
+  s.addText("v1 + TTA", {
     x: 0.7, y: 2.55, w: 5.1, h: 1.6,
-    fontFace: "Georgia", fontSize: 96, bold: true, color: "FFFFFF", margin: 0,
+    fontFace: "Georgia", fontSize: 72, bold: true, color: "FFFFFF", margin: 0,
   });
-  s.addText("ResNet-50 + CBAM", {
+  s.addText("ResNet-50 baseline", {
     x: 0.7, y: 4.1, w: 5.1, h: 0.5,
     fontFace: "Georgia", fontSize: 22, bold: true, color: "FFFFFF", margin: 0,
   });
-  s.addText("Focal Loss · MixUp · TTA", {
+  s.addText("+  5-view Test-Time Augmentation", {
     x: 0.7, y: 4.55, w: 5.1, h: 0.45,
     fontFace: "Calibri", fontSize: 16, italic: true, color: "C0CADC", margin: 0,
   });
@@ -1103,18 +1221,18 @@ function bigTitle(slide, title) {
     x: 0.7, y: 5.15, w: 0.6, h: 0.05, fill: { color: RED }, line: { color: RED }
   });
   s.addText([
-    { text: "Test metrics", options: { bold: true, color: "FFFFFF", breakLine: true } },
-    { text: "F1 = 0.9829", options: { color: "FFFFFF", fontSize: 14, breakLine: true } },
-    { text: "MCC = 0.9212", options: { color: "FFFFFF", fontSize: 14, breakLine: true } },
-    { text: "ROC-AUC = 0.9917", options: { color: "FFFFFF", fontSize: 14, breakLine: true } },
-    { text: "Recall = 0.9874", options: { color: "FFFFFF", fontSize: 14 } },
+    { text: "Test metrics  (nodule = positive)", options: { bold: true, color: "FFFFFF", breakLine: true } },
+    { text: "F1 = 0.9474", options: { color: "FFFFFF", fontSize: 14, breakLine: true } },
+    { text: "Recall = 0.9347", options: { color: "FFFFFF", fontSize: 14, breakLine: true } },
+    { text: "MCC = 0.9329", options: { color: "FFFFFF", fontSize: 14, breakLine: true } },
+    { text: "ROC-AUC = 0.9934", options: { color: "FFFFFF", fontSize: 14 } },
   ], {
     x: 0.7, y: 5.35, w: 5.1, h: 1.4,
     fontFace: "Calibri", fontSize: 14, paraSpaceAfter: 4, margin: 0,
   });
 
   // Right: 4 reasons stacked
-  s.addText("Why v2 — combining the four components into one model", {
+  s.addText("Why v1 + TTA — the ablation's clearest winner", {
     x: 6.3, y: 2.0, w: 6.5, h: 0.45,
     fontFace: "Georgia", fontSize: 16, bold: true, color: NAVY, margin: 0,
   });
@@ -1122,23 +1240,23 @@ function bigTitle(slide, title) {
   const reasons = [
     {
       n: "1",
-      title: "Methodologically complete",
-      body: "v2 addresses every known ResNet-50 limitation in one package: no attention → CBAM, naive imbalance handling → Focal Loss, weak regularisation → MixUp, single-pass inference → TTA."
+      title: "Best on every metric that matters",
+      body: "Highest F1 (0.9474), highest MCC (0.9329), highest ROC-AUC (0.9934), highest Accuracy (0.9771). Beats v2 across the board, despite v2 carrying three additional components."
     },
     {
       n: "2",
-      title: "Interpretability you can show clinicians",
-      body: "Only v2 (and v3) produces the CBAM spatial-attention heatmap. v1 + TTA cannot show where the model is looking — a deal-breaker for clinical adoption."
+      title: "Highest cancer-detection rate",
+      body: "Catches 315 of 337 nodules (Recall = 0.9347) — misses only 22. In medical screening, recall is the clinically critical direction; v1 + TTA wins it cleanly."
     },
     {
       n: "3",
-      title: "Defence in depth against deployment shift",
-      body: "Focal Loss + MixUp + CBAM together regularise the model against new scanners, new populations, or shifted nodule prevalence — v1 + TTA only adds inference-side averaging."
+      title: "Fewest false alarms too",
+      body: "Only 13 false-positive predictions (Specificity = 0.9891), the lowest of all six configurations. So we don't trade precision for recall — we improve both simultaneously."
     },
     {
       n: "4",
-      title: "Statistically equivalent on this test set",
-      body: "All deltas (v1, v1+TTA, v2) sit within the ±0.008 F1 confidence interval. v2's marginal numerical deficit is not a practical disadvantage — its qualitative gains are."
+      title: "Simplest possible deployment",
+      body: "Same trained model as v1 — no new parameters, no retraining cost. TTA is just 5 inference passes averaged. Easiest model to maintain, audit, and explain."
     },
   ];
   let yy = 2.55;
@@ -1170,16 +1288,16 @@ function bigTitle(slide, title) {
   });
   s.addText([
     { text: "Alternatives —  ", options: { bold: true, color: "FFFFFF" } },
-    { text: "v1 ", options: { bold: true, color: "FFFFFF" } },
-    { text: "for a quick prototype  ·  ", options: { color: "FFFFFF" } },
+    { text: "v2 ", options: { bold: true, color: "FFFFFF" } },
+    { text: "if CBAM interpretability heatmaps are required for clinical UI  ·  ", options: { color: "FFFFFF" } },
     { text: "v3 ", options: { bold: true, color: "FFFFFF" } },
-    { text: "for edge / mobile / low-VRAM deployment (3× smaller, similar accuracy).", options: { color: "FFFFFF" } },
+    { text: "for edge / low-VRAM deployment (3× smaller).", options: { color: "FFFFFF" } },
   ], {
     x: 0.5, y: 6.55, w: 12.3, h: 0.4,
     fontFace: "Calibri", fontSize: 12, align: "center", valign: "middle", margin: 0,
   });
 
-  footer(s, 13, 17);
+  footer(s, 14, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1193,13 +1311,13 @@ function bigTitle(slide, title) {
 
   const items = [
     { title: "Leakage-free LUNA16 classifier",
-      body: "Patient-level split across full LUNA16 (888 patients). Test = 1 528 patches across 176 unseen patients." },
-    { title: "Three honestly-compared models",
-      body: "v1 (ResNet-50)  ·  v2 (+CBAM, Focal, MixUp, TTA)  ·  v3 (DenseNet-121+CBAM, Focal, MixUp, TTA)" },
-    { title: "Production-grade results",
-      body: "F1 = 0.9833  ·  ROC-AUC = 0.9929  ·  MCC = 0.9233  —  competitive with peer-reviewed LUNA16 baselines." },
+      body: "Patient-level split across full LUNA16 (888 patients). Test = 1 528 patches across 176 unseen patients — audited, zero overlap." },
+    { title: "Three models + four-component ablation",
+      body: "v1 (ResNet-50) · v2 (+CBAM, Focal, MixUp, TTA) · v3 (DenseNet-121+CBAM, …) + v1 with each component in isolation." },
+    { title: "Final deployment: v1 + TTA",
+      body: "F1 = 0.9474 · Recall = 0.9347 · MCC = 0.9329 · AUC = 0.9934 — catches 315 of 337 nodules with only 13 false alarms." },
     { title: "Honest scientific story",
-      body: "Detected and corrected patient-level leakage on IQ-OTH/NCCD. Reported deltas with confidence intervals — not just point estimates." },
+      body: "Caught patient-level leakage on IQ-OTH/NCCD, caught a metric-reporting bug ourselves during sanity-check, reported corrected numbers with CIs." },
   ];
 
   items.forEach((it, i) => {
@@ -1224,11 +1342,11 @@ function bigTitle(slide, title) {
     });
   });
 
-  footer(s, 14, 17);
+  footer(s, 15, 18);
 }
 
 // ─────────────────────────────────────────────────────────
-//  SLIDE 12 — DEMO PLACEHOLDER  (5%)
+//  SLIDE 16 — DEMO PLACEHOLDER  (5%)
 // ─────────────────────────────────────────────────────────
 {
   const s = pres.addSlide();
@@ -1252,7 +1370,7 @@ function bigTitle(slide, title) {
     align: "center", margin: 0,
   });
 
-  footer(s, 15, 17);
+  footer(s, 16, 18);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1313,7 +1431,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, align: "center", valign: "middle", margin: 0,
   });
 
-  footer(s, 16, 17);
+  footer(s, 17, 18);
 }
 
 // ─────────────────────────────────────────────────────────
