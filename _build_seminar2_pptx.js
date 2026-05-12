@@ -201,7 +201,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 13, paraSpaceAfter: 4, margin: 0,
   });
 
-  footer(s, 2, 18);
+  footer(s, 2, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -270,7 +270,7 @@ function bigTitle(slide, title) {
     });
   });
 
-  footer(s, 3, 18);
+  footer(s, 3, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -362,7 +362,7 @@ function bigTitle(slide, title) {
     }
   });
 
-  footer(s, 4, 18);
+  footer(s, 4, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -451,7 +451,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 13, valign: "middle", margin: 0,
   });
 
-  footer(s, 5, 18);
+  footer(s, 5, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -541,7 +541,7 @@ function bigTitle(slide, title) {
     yv += 1.32;
   });
 
-  footer(s, 6, 18);
+  footer(s, 6, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -645,11 +645,164 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, margin: 0,
   });
 
-  footer(s, 7, 18);
+  footer(s, 7, 19);
 }
 
 // ─────────────────────────────────────────────────────────
-//  SLIDE 8 — DIFFERENCES BETWEEN VERSIONS
+//  SLIDE 8 — TEST-TIME AUGMENTATION (NEW)
+// ─────────────────────────────────────────────────────────
+{
+  const s = pres.addSlide();
+  s.background = { color: CREAM };
+  header(s, "Methodology — Test-Time Augmentation (TTA)");
+  bigTitle(s, "5-View Inference-Time Averaging");
+
+  s.addText("The single ablation component that consistently improved every metric over v1. Used by all three of our final models.", {
+    x: 0.5, y: 1.75, w: 12.3, h: 0.32,
+    fontFace: "Calibri", fontSize: 13, italic: true, color: GRAY, margin: 0,
+  });
+
+  // ── LEFT CARD — The 5 transformations + pipeline ──
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 0.5, y: 2.15, w: 6.1, h: 4.5,
+    fill: { color: "FFFFFF" }, line: { color: "E0DCD0", width: 1 },
+    shadow: { type: "outer", color: "000000", blur: 8, offset: 2, angle: 90, opacity: 0.08 }
+  });
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 0.5, y: 2.15, w: 6.1, h: 0.08, fill: { color: NAVY }, line: { color: NAVY }
+  });
+  s.addText("THE PROCESS", {
+    x: 0.75, y: 2.32, w: 5.6, h: 0.3,
+    fontFace: "Calibri", fontSize: 11, bold: true, color: NAVY, charSpacing: 4, margin: 0,
+  });
+  s.addText("How TTA works", {
+    x: 0.75, y: 2.60, w: 5.6, h: 0.45,
+    fontFace: "Georgia", fontSize: 20, bold: true, color: NAVY, margin: 0,
+  });
+
+  // Five view chips
+  const views = [
+    { label: "Original",       sub: "identity" },
+    { label: "H-flip",         sub: "←→"   },
+    { label: "V-flip",         sub: "↕"    },
+    { label: "Rot 90°",        sub: "↻ 90"  },
+    { label: "Rot 270°",       sub: "↻ 270" },
+  ];
+  views.forEach((v, i) => {
+    const cx = 0.78 + i * 1.10;
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: cx, y: 3.20, w: 1.0, h: 0.85,
+      fill: { color: LIGHT }, line: { color: NAVY, width: 1 },
+    });
+    s.addText(v.label, {
+      x: cx, y: 3.22, w: 1.0, h: 0.32,
+      fontFace: "Calibri", fontSize: 11, bold: true, color: NAVY,
+      align: "center", margin: 0,
+    });
+    s.addText(v.sub, {
+      x: cx, y: 3.56, w: 1.0, h: 0.4,
+      fontFace: "Consolas", fontSize: 12, color: GRAY,
+      align: "center", margin: 0,
+    });
+  });
+
+  // Pipeline steps
+  s.addText([
+    { text: "1.  ", options: { bold: true, color: RED } },
+    { text: "Generate 5 augmented copies of each test patch.", options: { color: BLACK, breakLine: true } },
+    { text: "2.  ", options: { bold: true, color: RED } },
+    { text: "Pass each through the same trained model.", options: { color: BLACK, breakLine: true } },
+    { text: "3.  ", options: { bold: true, color: RED } },
+    { text: "Average the softmax probabilities.", options: { color: BLACK, breakLine: true } },
+    { text: "4.  ", options: { bold: true, color: RED } },
+    { text: "Take argmax for the final prediction.", options: { color: BLACK } },
+  ], {
+    x: 0.75, y: 4.30, w: 5.6, h: 1.5,
+    fontFace: "Calibri", fontSize: 13, paraSpaceAfter: 4, margin: 0,
+  });
+
+  // Formula strip
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 0.75, y: 5.90, w: 5.6, h: 0.6,
+    fill: { color: LIGHT }, line: { color: "E0DCD0", width: 1 },
+  });
+  s.addText("P_final(y | x)   =   (1 / 5)   ·   Σᵢ   P(y | tᵢ(x))", {
+    x: 0.78, y: 5.93, w: 5.55, h: 0.55,
+    fontFace: "Consolas", fontSize: 13, color: NAVY, italic: true,
+    align: "center", valign: "middle", margin: 0,
+  });
+
+  // ── RIGHT CARD — Why TTA helps + empirical result ──
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 6.7, y: 2.15, w: 6.1, h: 4.5,
+    fill: { color: "FFFFFF" }, line: { color: "E0DCD0", width: 1 },
+    shadow: { type: "outer", color: "000000", blur: 8, offset: 2, angle: 90, opacity: 0.08 }
+  });
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 6.7, y: 2.15, w: 6.1, h: 0.08, fill: { color: RED }, line: { color: RED }
+  });
+  s.addText("WHY IT HELPS", {
+    x: 6.95, y: 2.32, w: 5.6, h: 0.3,
+    fontFace: "Calibri", fontSize: 11, bold: true, color: RED, charSpacing: 4, margin: 0,
+  });
+  s.addText("Robustness + variance reduction", {
+    x: 6.95, y: 2.60, w: 5.6, h: 0.45,
+    fontFace: "Georgia", fontSize: 20, bold: true, color: NAVY, margin: 0,
+  });
+
+  // Benefits bullets
+  s.addText([
+    { text: "Improves robustness", options: { bold: true, color: NAVY } },
+    { text: " — a single orientation may produce noisy predictions; averaging smooths those out.", options: { color: BLACK, breakLine: true } },
+    { text: " ", options: { breakLine: true, fontSize: 4 } },
+    { text: "Reduces prediction variance", options: { bold: true, color: NAVY } },
+    { text: " — every flip / rotation is a partially-independent sample of the model's belief about the same patch.", options: { color: BLACK, breakLine: true } },
+    { text: " ", options: { breakLine: true, fontSize: 4 } },
+    { text: "Free at training time", options: { bold: true, color: NAVY } },
+    { text: " — TTA happens only at inference, adds no parameters, no retraining.", options: { color: BLACK } },
+  ], {
+    x: 6.95, y: 3.10, w: 5.6, h: 2.0,
+    fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 3, margin: 0,
+  });
+
+  // Empirical result panel inside the right card
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 6.95, y: 5.20, w: 5.6, h: 1.30,
+    fill: { color: "FCE6E7" }, line: { color: RED, width: 1 },
+  });
+  s.addText("FROM OUR ABLATION", {
+    x: 7.10, y: 5.27, w: 5.3, h: 0.25,
+    fontFace: "Calibri", fontSize: 10, bold: true, color: RED, charSpacing: 4, margin: 0,
+  });
+  s.addText([
+    { text: "v1 alone   :  ", options: { color: BLACK } },
+    { text: "F1 = 0.9399", options: { bold: true, color: NAVY, breakLine: true } },
+    { text: "v1 + TTA :  ", options: { color: BLACK } },
+    { text: "F1 = 0.9474", options: { bold: true, color: RED } },
+    { text: "   (+0.0074, only component above noise floor)", options: { italic: true, color: GRAY } },
+  ], {
+    x: 7.10, y: 5.55, w: 5.3, h: 0.95,
+    fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 3, margin: 0,
+  });
+
+  // Bottom takeaway
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: 0.5, y: 6.75, w: 12.3, h: 0.4,
+    fill: { color: NAVY }, line: { color: NAVY },
+  });
+  s.addText([
+    { text: "TTA is the only ablation component that cleared the ±0.008 F1 noise floor — and it's our final deployment ingredient: ", options: { color: "FFFFFF" } },
+    { text: "v1 + TTA.", options: { bold: true, italic: true, color: "FFFFFF" } },
+  ], {
+    x: 0.5, y: 6.75, w: 12.3, h: 0.4,
+    fontFace: "Calibri", fontSize: 12, align: "center", valign: "middle", margin: 0,
+  });
+
+  footer(s, 8, 19);
+}
+
+// ─────────────────────────────────────────────────────────
+//  SLIDE 9 — DIFFERENCES BETWEEN VERSIONS
 // ─────────────────────────────────────────────────────────
 {
   const s = pres.addSlide();
@@ -742,7 +895,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 2, margin: 0,
   });
 
-  footer(s, 8, 18);
+  footer(s, 9, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -808,7 +961,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 3, margin: 0,
   });
 
-  footer(s, 9, 18);
+  footer(s, 10, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -903,7 +1056,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 5, margin: 0,
   });
 
-  footer(s, 10, 18);
+  footer(s, 11, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -984,7 +1137,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, paraSpaceAfter: 3, margin: 0,
   });
 
-  footer(s, 11, 18);
+  footer(s, 12, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1076,7 +1229,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 13, align: "center", valign: "middle", margin: 0,
   });
 
-  footer(s, 12, 18);
+  footer(s, 13, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1183,7 +1336,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 13, paraSpaceAfter: 4, margin: 0,
   });
 
-  footer(s, 13, 18);
+  footer(s, 14, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1297,7 +1450,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, align: "center", valign: "middle", margin: 0,
   });
 
-  footer(s, 14, 18);
+  footer(s, 15, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1342,7 +1495,7 @@ function bigTitle(slide, title) {
     });
   });
 
-  footer(s, 15, 18);
+  footer(s, 16, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1354,23 +1507,35 @@ function bigTitle(slide, title) {
   header(s, "Short Demonstration");
   bigTitle(s, "Live Demo (≤ 1 minute)");
 
-  // Big placeholder area
-  s.addShape(pres.shapes.RECTANGLE, {
-    x: 1.5, y: 2.0, w: 10.3, h: 4.7,
-    fill: { color: "FFFFFF" }, line: { color: NAVY, width: 2, dashType: "dash" },
-  });
-  s.addText("[ Demo video — to be inserted ]", {
-    x: 1.5, y: 3.5, w: 10.3, h: 0.7,
-    fontFace: "Georgia", fontSize: 28, italic: true, color: GRAY,
-    align: "center", valign: "middle", margin: 0,
-  });
-  s.addText("Suggested content: load best model → infer on a held-out test patch → show predicted probability and CBAM heatmap overlay (max 60 s).", {
-    x: 1.5, y: 4.5, w: 10.3, h: 1.0,
-    fontFace: "Calibri", fontSize: 14, color: GRAY,
-    align: "center", margin: 0,
+  // Subtitle ABOVE the video (between the title rule and the video)
+  s.addText([
+    { text: "60 s live inference  ·  ", options: { bold: true, color: NAVY } },
+    { text: "6 unseen test patches  ·  CBAM spatial-attention heatmap overlaid  ·  ", options: { color: BLACK } },
+    { text: "model = v2 (interpretability illustration); deployment model is v1 + TTA.", options: { italic: true, color: GRAY } },
+  ], {
+    x: 0.5, y: 1.70, w: 12.3, h: 0.30,
+    fontFace: "Calibri", fontSize: 11, align: "center", valign: "middle", margin: 0,
   });
 
-  footer(s, 16, 18);
+  // Embed the demo.mp4 video — 16:9 aspect maintained
+  //   Source: rendered by _make_demo_video.py (60 s, 1280×720 H.264)
+  //   Video frame: 8.72" × 4.90" (16:9). Below the subtitle, above the footer at y=7.10.
+  const VID_W = 8.72, VID_H = 4.90;
+  const VID_X = (SLIDE_W - VID_W) / 2;
+  const VID_Y = 2.10;
+  // Navy border frame behind the video
+  s.addShape(pres.shapes.RECTANGLE, {
+    x: VID_X - 0.06, y: VID_Y - 0.06, w: VID_W + 0.12, h: VID_H + 0.12,
+    fill: { color: NAVY }, line: { color: NAVY },
+  });
+  // The video itself
+  s.addMedia({
+    type: "video",
+    path: "demo.mp4",
+    x: VID_X, y: VID_Y, w: VID_W, h: VID_H,
+  });
+
+  footer(s, 17, 19);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1431,7 +1596,7 @@ function bigTitle(slide, title) {
     fontFace: "Calibri", fontSize: 12, align: "center", valign: "middle", margin: 0,
   });
 
-  footer(s, 17, 18);
+  footer(s, 18, 19);
 }
 
 // ─────────────────────────────────────────────────────────
